@@ -1,0 +1,50 @@
+buildscript {
+    ext.kotlin_version = '1.2.71'
+    repositories {
+        jcenter()
+    }
+    dependencies {
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
+    }
+}
+
+plugins {
+    id "com.github.johnrengelman.shadow" version "2.0.4"
+    id "org.jetbrains.kotlin.jvm" version "1.2.71"
+    id "org.jetbrains.kotlin.kapt" version "1.2.71"
+}
+
+group 'io.github.teitss'
+version '1.0.0'
+description 'A plugin to sell packages for special credits.'
+archivesBaseName = 'CashShop'
+
+sourceCompatibility = targetCompatibility = "1.8"
+compileJava.options.encoding = "UTF-8"
+
+build {
+    shadowJar {}
+}
+
+shadowJar {
+    configurations = [project.configurations.shadow]
+    relocate 'kotlin', 'repack.kotlin'
+}
+configurations {
+    compile.extendsFrom shadow
+    compile.extendsFrom kapt
+}
+
+repositories {
+    mavenCentral()
+    maven { url = "https://repo.spongepowered.org/maven" }
+}
+
+dependencies {
+    kapt 'org.spongepowered:spongeapi:7.1.0'
+    shadow "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+}
+
+compileKotlin {
+    kotlinOptions.jvmTarget = "1.8"
+}
