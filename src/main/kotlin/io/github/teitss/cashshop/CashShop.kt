@@ -3,7 +3,7 @@ package io.github.teitss.cashshop
 import com.google.inject.Inject
 import io.github.teitss.cashshop.commands.CashShopCommand
 import io.github.teitss.cashshop.config.CashShopConfig
-import io.github.teitss.cashshop.database.CashDAO
+import io.github.teitss.cashshop.database.CashRepository
 import io.github.teitss.cashshop.listeners.ClientConnectionListener
 import ninja.leaping.configurate.commented.CommentedConfigurationNode
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader
@@ -25,7 +25,7 @@ import java.util.concurrent.TimeUnit
 @Plugin(
         id="cashshop",
         name="CashShop",
-        version="1.0.0",
+        version="1.0.1",
         description = "A plugin to sell packages for special credits.",
         authors= arrayOf("Teits / Discord Teits#7663")
 )
@@ -54,14 +54,14 @@ class CashShop @Inject constructor(
     fun onServerStart(event: GameStartingServerEvent) {
         logger.info("Configuring logs directory...")
         File(configDir.toString() + "/logs").mkdirs()
-        logger.info("Connecting to database...")
-        CashDAO.setupDatabase()
         logger.info("Registering commands...")
         Sponge.getCommandManager().register(this, CashShopCommand().commandSpec, "cashshop", "donationshop")
         logger.info("Initializing scheduled tasks...")
         initTasks().forEach {
             it.submit(this)
         }
+        logger.info("Connecting to database...")
+        CashRepository.setupDatabase()
     }
 
     @Listener

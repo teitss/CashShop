@@ -8,10 +8,25 @@ import org.spongepowered.api.command.CommandResult
 import org.spongepowered.api.command.args.GenericArguments
 import org.spongepowered.api.command.spec.CommandSpec
 import org.spongepowered.api.entity.living.player.Player
+import org.spongepowered.api.entity.living.player.User
 import org.spongepowered.api.text.Text
+import org.spongepowered.api.text.format.TextColors
 import java.util.*
 
 class CashShopCommand {
+
+    val addCommandSpec = CommandSpec.builder()
+            .permission("cashshop.admin.command.add")
+            .arguments(GenericArguments.onlyOne(GenericArguments.user(Text.of("player"))),
+                    GenericArguments.onlyOne(GenericArguments.integer(Text.of("quantity"))))
+            .executor { src, args ->
+                val user = args.getOne<User>(Text.of("player")).get()
+                val cash = args.getOne<Int>(Text.of("quantity")).get()
+                CashManager.addCashToPlayer(user, cash)
+                src.sendMessage(Text.of(TextColors.GREEN, "Você adicionou $$cash créditos para o jogador ${user.name}."))
+                CommandResult.success()
+            }
+            .build()
 
     val cashCommandSpec = CommandSpec.builder()
             .permission("cashshop.command.cashshop")
@@ -27,6 +42,7 @@ class CashShopCommand {
             .permission("cashshop.command.cashshop")
             .arguments(GenericArguments.onlyOne(GenericArguments.string(Text.of("package"))))
             .child(cashCommandSpec, "saldo", "cash")
+            .child(addCommandSpec, "add", "adicionar")
             .executor { src, args ->
                 if(src is Player) {
                     val packID = args.getOne<String>(Text.of("package")).get()

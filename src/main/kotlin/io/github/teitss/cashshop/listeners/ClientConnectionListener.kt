@@ -2,7 +2,7 @@ package io.github.teitss.cashshop.listeners
 
 import io.github.teitss.cashshop.CashManager
 import io.github.teitss.cashshop.CashShop
-import io.github.teitss.cashshop.database.CashDAO
+import io.github.teitss.cashshop.database.CashRepository
 import org.spongepowered.api.event.Listener
 import org.spongepowered.api.event.network.ClientConnectionEvent
 import org.spongepowered.api.scheduler.Task
@@ -15,7 +15,7 @@ class ClientConnectionListener {
         Task.builder()
                 .name("LoadCash")
                 .execute { _ ->
-                    CashDAO.selectPlayerCredits(e.targetEntity).ifPresent { cash ->
+                    CashRepository.selectPlayerCredits(e.targetEntity).ifPresent { cash ->
                         CashManager.addPlayerToMap(e.targetEntity, cash)
                     }
                 }

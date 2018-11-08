@@ -1,9 +1,10 @@
 package io.github.teitss.cashshop
 
 import io.github.teitss.cashshop.config.CashPackage
-import io.github.teitss.cashshop.database.CashDAO
+import io.github.teitss.cashshop.database.CashRepository
 import org.spongepowered.api.Sponge
 import org.spongepowered.api.entity.living.player.Player
+import org.spongepowered.api.entity.living.player.User
 import org.spongepowered.api.scheduler.Task
 import java.util.*
 import java.util.concurrent.TimeUnit
@@ -44,21 +45,33 @@ object CashManager {
     fun removeCashFromPlayer(player: Player, value: Int) {
         val cash = cashMap[player.uniqueId]!! - value
         cashMap.replace(player.uniqueId, cash)
-        save(player, value)
-    }
-
-    fun addCashToPlayer(player: Player, value: Int) {
-        val cash = cashMap[player.uniqueId]!! + value
-        cashMap.replace(player.uniqueId, cash)
         save(player, cash)
     }
 
-    fun save(player: Player, cash: Int) {
+    fun addCashToPlayer(player: User, value: Int) {
+        if(cashMap.containsKey(player.uniqueId)) {
+            val cash = cashMap[player.uniqueId]!! + value
+            cashMap.replace(player.uniqueId, cash)
+            save(player, cash)
+        } else {
+            Task.builder()
+                    .name("CashAddTask")
+                    .execute { _ ->
+                        val dbCash = CashRepository.selectPlayerCredits(player).orElse(0)
+                        CashRepository.updatePlayerCredits(player, dbCash + value)
+                    }
+                    .delay(3, TimeUnit.MILLISECONDS)
+                    .async()
+                    .submit(CashShop.instance)
+        }
+
+    }
+
+    fun save(player: User, cash: Int) {
         Task.builder()
                 .name("CashSaveTask")
                 .execute { _ ->
-                    val dbCash = CashDAO.selectPlayerCredits(player).get()
-                    CashDAO.updatePlayerCredits(player, dbCash - cash)
+                    CashRepository.updatePlayerCredits(player, cash)
                 }
                 .delay(3, TimeUnit.MILLISECONDS)
                 .async()
@@ -67,14 +80,14 @@ object CashManager {
 
     //ONLY USE THIS inside a async task
     fun refreshPlayerCash(player: Player) {
-        val cash = CashDAO.selectPlayerCredits(player).get()
+        val cash = CashRepository.selectPlayerCredits(player).get()
         cashMap.replace(player.uniqueId, cash)
     }
 
     //ONLY USE THIS inside a async task
     fun refreshOnlinePlayersCash() {
         Sponge.getServer().onlinePlayers.forEach {player ->
-            CashDAO.selectPlayerCredits(player).ifPresent {
+            CashRepository.selectPlayerCredits(player).ifPresent {
                 cashMap[player.uniqueId] = it
             }
         }
