@@ -23,6 +23,7 @@ class CashShopCommand {
                 val user = args.getOne<User>(Text.of("player")).get()
                 val cash = args.getOne<Int>(Text.of("quantity")).get()
                 CashManager.addCashToPlayer(user, cash)
+                LogRegistrar.mapRecord(Date(), "COMANDO = Executor: ${src.name} | Receptor: ${user.name} | Quantidade: $cash")
                 src.sendMessage(Text.of(TextColors.GREEN, "Você adicionou $$cash créditos para o jogador ${user.name}."))
                 CommandResult.success()
             }

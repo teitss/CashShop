@@ -4,7 +4,6 @@ import io.github.teitss.cashshop.CashManager
 import io.github.teitss.cashshop.CashShop
 import ninja.leaping.configurate.commented.CommentedConfigurationNode
 import ninja.leaping.configurate.loader.ConfigurationLoader
-import org.spongepowered.api.Sponge
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.properties.Delegates
@@ -29,7 +28,7 @@ object CashShopConfig {
     fun load(configManager: ConfigurationLoader<CommentedConfigurationNode>) {
         val configNode = configManager.load()
         taskCash = configNode.getNode("tasks", "cashRefreshInterval").getLong()
-        taskLog = configNode.getNode("tasks", " logsSaveInterval").getLong()
+        taskLog = configNode.getNode("tasks", "logsSaveInterval").getLong()
         cashDatabaseName = configNode.getNode("database", "databaseName").getString().orEmpty()
         cashDatabaseAddress = configNode.getNode("database", "databaseAddress").getString().orEmpty()
         cashDatabaseUser = configNode.getNode("database", "databaseUser").getString().orEmpty()
@@ -46,7 +45,7 @@ object CashShopConfig {
     }
 
     fun install(path: Path) {
-        val configFile = Sponge.getAssetManager().getAsset(CashShop.instance, "cashshop.conf").get()
+        val configFile = CashShop.instance.pluginContainer.getAsset("cashshop.conf").get()
         configFile.copyToDirectory(path)
         CashShop.instance.logger.info("Configuration successfully installed.")
     }

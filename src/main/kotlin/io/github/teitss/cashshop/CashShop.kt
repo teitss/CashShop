@@ -21,11 +21,12 @@ import org.spongepowered.api.scheduler.Task
 import java.io.File
 import java.nio.file.Path
 import java.util.concurrent.TimeUnit
+import kotlin.properties.Delegates
 
 @Plugin(
         id="cashshop",
         name="CashShop",
-        version="1.0.1",
+        version="1.0.2",
         description = "A plugin to sell packages for special credits.",
         authors= arrayOf("Teits / Discord Teits#7663")
 )
@@ -35,7 +36,7 @@ class CashShop @Inject constructor(
         @ConfigDir(sharedRoot = false) val configDir: Path) {
 
     companion object {
-        lateinit var instance: CashShop
+        var instance: CashShop by Delegates.notNull()
     }
 
     lateinit var configManager: ConfigurationLoader<CommentedConfigurationNode>
@@ -58,7 +59,7 @@ class CashShop @Inject constructor(
         Sponge.getCommandManager().register(this, CashShopCommand().commandSpec, "cashshop", "donationshop")
         logger.info("Initializing scheduled tasks...")
         initTasks().forEach {
-            it.submit(this)
+            it.submit(this.pluginContainer)
         }
         logger.info("Connecting to database...")
         CashRepository.setupDatabase()
@@ -69,28 +70,31 @@ class CashShop @Inject constructor(
         logger.info("Reloading plugin configuration...")
         CashShopConfig.load(configManager)
         logger.info("Restarting scheduled tasks")
-        Sponge.getScheduler().getScheduledTasks(this).forEach { it.cancel() }
+        Sponge.getScheduler().getScheduledTasks(this.pluginContainer).forEach { it.cancel() }
         initTasks().forEach {
-            it.submit(this)
+            it.submit(this.pluginContainer)
         }
     }
 
     private fun initTasks(): List<Task.Builder> {
-        return mutableListOf<Task.Builder>().also {
-            if(CashShopConfig.taskLog > 0)
-                it.add(Task.builder()
+        return mutableListOf<Task.Builder>().apply {
+            if(CashShopConfig.taskLog > 0) {
+                this.add(Task.builder()
                         .name("LogSaveTask")
                         .async()
                         .execute { _ -> LogRegistrar.registerRecords() }
                         .delay(CashShopConfig.taskLog, TimeUnit.SECONDS)
                         .interval(CashShopConfig.taskLog, TimeUnit.SECONDS))
-            if(CashShopConfig.taskCash > 0)
-                it.add(Task.builder()
+            }
+
+            if(CashShopConfig.taskCash > 0) {
+                this.add(Task.builder()
                         .name("CashRefreshTask")
                         .async()
                         .execute { _ -> CashManager.refreshOnlinePlayersCash() }
                         .delay(CashShopConfig.taskCash, TimeUnit.SECONDS)
                         .interval(CashShopConfig.taskCash, TimeUnit.SECONDS))
+            }
         }
 
     }

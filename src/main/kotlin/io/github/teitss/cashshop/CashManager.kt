@@ -54,6 +54,8 @@ object CashManager {
             cashMap.replace(player.uniqueId, cash)
             save(player, cash)
         } else {
+            if (Sponge.getServer().getPlayer(player.uniqueId).isPresent)
+                cashMap[player.uniqueId] = value
             Task.builder()
                     .name("CashAddTask")
                     .execute { _ ->
@@ -91,6 +93,7 @@ object CashManager {
                 cashMap[player.uniqueId] = it
             }
         }
+        CashShop.instance.logger.info("Os créditos dos jogadores foram atualizados.")
     }
 
 }
