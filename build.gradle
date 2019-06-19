@@ -1,3 +1,4 @@
+import org.apache.tools.ant.filters.ReplaceTokens
 buildscript {
     ext.kotlin_version = '1.2.71'
     repositories {
@@ -11,40 +12,41 @@ buildscript {
 plugins {
     id "com.github.johnrengelman.shadow" version "2.0.4"
     id "org.jetbrains.kotlin.jvm" version "1.2.71"
-    id "org.jetbrains.kotlin.kapt" version "1.2.71"
 }
 
 group 'io.github.teitss'
-version '1.0.2'
+version pluginVersion
 description 'A plugin to sell packages for special credits.'
 archivesBaseName = 'CashShop'
 
 sourceCompatibility = targetCompatibility = "1.8"
 compileJava.options.encoding = "UTF-8"
 
-build {
-    shadowJar {}
-}
-
 shadowJar {
     configurations = [project.configurations.shadow]
     relocate 'kotlin', 'repack.kotlin'
+    relocate 'org.intellij', 'repack.org.intellij'
+    relocate 'org.jetbrains', 'repack.org.jetbrains'
 }
-configurations {
-    compile.extendsFrom shadow
-    compile.extendsFrom kapt
-}
+
+build.dependsOn shadowJar
 
 repositories {
     mavenCentral()
     maven { url = "https://repo.spongepowered.org/maven" }
+    maven { url = 'https://jitpack.io'}
 }
 
 dependencies {
-    kapt 'org.spongepowered:spongeapi:7.1.0'
+    compile 'org.spongepowered:spongeapi:7.1.0'
     shadow "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
+    compile 'com.github.rojo8399:PlaceholderAPI:master-SNAPSHOT'
 }
 
 compileKotlin {
     kotlinOptions.jvmTarget = "1.8"
+}
+
+processResources {
+    filter(ReplaceTokens, tokens : [pluginVersion : pluginVersion])
 }

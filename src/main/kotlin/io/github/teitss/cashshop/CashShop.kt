@@ -5,6 +5,7 @@ import io.github.teitss.cashshop.commands.CashShopCommand
 import io.github.teitss.cashshop.config.CashShopConfig
 import io.github.teitss.cashshop.database.CashRepository
 import io.github.teitss.cashshop.listeners.ClientConnectionListener
+import me.rojo8399.placeholderapi.PlaceholderService
 import ninja.leaping.configurate.commented.CommentedConfigurationNode
 import ninja.leaping.configurate.hocon.HoconConfigurationLoader
 import ninja.leaping.configurate.loader.ConfigurationLoader
@@ -14,7 +15,9 @@ import org.spongepowered.api.config.ConfigDir
 import org.spongepowered.api.event.Listener
 import org.spongepowered.api.event.game.GameReloadEvent
 import org.spongepowered.api.event.game.state.GameInitializationEvent
+import org.spongepowered.api.event.game.state.GameStartedServerEvent
 import org.spongepowered.api.event.game.state.GameStartingServerEvent
+import org.spongepowered.api.plugin.Dependency
 import org.spongepowered.api.plugin.Plugin
 import org.spongepowered.api.plugin.PluginContainer
 import org.spongepowered.api.scheduler.Task
@@ -26,9 +29,10 @@ import kotlin.properties.Delegates
 @Plugin(
         id="cashshop",
         name="CashShop",
-        version="1.0.2",
+        version = "@pluginVersion@",
         description = "A plugin to sell packages for special credits.",
-        authors= arrayOf("Teits / Discord Teits#7663")
+        authors = ["Teits / Discord Teits#7663"],
+        dependencies = [Dependency(id = "placeholderapi")]
 )
 class CashShop @Inject constructor(
         val logger: Logger,
@@ -97,6 +101,22 @@ class CashShop @Inject constructor(
             }
         }
 
+    }
+
+    @Listener
+    fun onServerStarted(e: GameStartedServerEvent) {
+        Sponge.getServiceManager().provide(PlaceholderService::class.java).get().loadAll(Placeholders(), this)
+                .stream().map { builder ->
+                    return@map builder.description("Get player's cash amount.")
+                }.map { builder ->
+                    builder.author("Teits").version("1.1.0")
+                }.forEach { builder ->
+                    try {
+                        builder.buildAndRegister()
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
     }
 
 }
